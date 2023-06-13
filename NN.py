@@ -8,10 +8,10 @@ from ImageDataset import ImageDataset
 from interface import blur_image
 
 # Download training data from open datasets.
-training_data = ImageDataset('input/train', transform=ToTensor())
+training_data = ImageDataset("input/train", transform=ToTensor())
 
 # Download test data from open datasets.
-test_data = ImageDataset('input/train', transform=ToTensor())
+test_data = ImageDataset("input/train", transform=ToTensor())
 
 batch_size = 1
 
@@ -22,7 +22,8 @@ test_dataloader = DataLoader(test_data, batch_size=batch_size)
 for test_sample in test_dataloader:
     print(f"Shape of image [N, C, H, W]: {test_sample['image'].shape}")
     print(
-        f"Shape of blurred image: {test_sample['blurred image'].shape} {test_sample['blurred image'].dtype}")
+        f"Shape of blurred image: {test_sample['blurred image'].shape} {test_sample['blurred image'].dtype}"
+    )
     break
 
 # Get cpu, gpu or mps device for training.
@@ -46,13 +47,14 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 512 * 512)
+            nn.Linear(512, 512 * 512),
         )
 
     def forward(self, x):
         x = self.flatten(x)
         print(
-            f"type of x: {x.dtype}, shape of x: {x.shape}. type of bias: {self.linear_relu_stack[0].bias.dtype}, shape of bias: {self.linear_relu_stack[0].bias.shape}")
+            f"type of x: {x.dtype}, shape of x: {x.shape}. type of bias: {self.linear_relu_stack[0].bias.dtype}, shape of bias: {self.linear_relu_stack[0].bias.shape}"
+        )
         logits = self.linear_relu_stack(x)
         return logits
 
@@ -66,13 +68,13 @@ def train(dataloader, model, loss_fn, optimizer):
     model.train()
     for batch, sample in enumerate(dataloader):
         print(
-            f"batch: {batch}, X: {sample['image'].dtype}, y: {sample['blurred image'].dtype}")
+            f"batch: {batch}, X: {sample['image'].dtype}, y: {sample['blurred image'].dtype}"
+        )
         # X, y = X.to(device), y.to(device)
 
         # Compute prediction error
-        pred = model(sample['image'])
-        loss = loss_fn(blur_image(pred).flatten(),
-                       sample['blurred image'].flatten())
+        pred = model(sample["image"])
+        loss = loss_fn(blur_image(pred).flatten(), sample["blurred image"].flatten())
 
         # Backpropagation
         loss.backward()
@@ -80,7 +82,7 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.zero_grad()
 
         if batch % 100 == 0:
-            loss, current = loss.item(), (batch + 1) * len(sample['image'])
+            loss, current = loss.item(), (batch + 1) * len(sample["image"])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
@@ -92,15 +94,21 @@ def test(dataloader, model, loss_fn):
     with torch.no_grad():
         for sample in dataloader:
             # X, y = X.to(device), y.to(device)
-            pred = model(sample['image'])
-            test_loss += loss_fn(blur_image(pred).flatten(),
-                                 sample['blurred image'].flatten()).item()
-            correct += (pred.argmax(1) ==
-                        sample['blurred image']).type(torch.float).sum().item()
+            pred = model(sample["image"])
+            test_loss += loss_fn(
+                blur_image(pred).flatten(), sample["blurred image"].flatten()
+            ).item()
+            correct += (
+                (pred.argmax(1) == sample["blurred image"])
+                .type(torch.float)
+                .sum()
+                .item()
+            )
     test_loss /= num_batches
     correct /= size
     print(
-        f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+        f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n"
+    )
 
 
 loss_fn = nn.CrossEntropyLoss()
