@@ -21,7 +21,8 @@ test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
 for test_sample in test_dataloader:
     print(f"Shape of image [N, C, H, W]: {test_sample['image'].shape}")
-    print(f"Shape of blurred image: {test_sample['blurred image'].shape} {test_sample['blurred image'].dtype}")
+    print(
+        f"Shape of blurred image: {test_sample['blurred image'].shape} {test_sample['blurred image'].dtype}")
     break
 
 # Get cpu, gpu or mps device for training.
@@ -64,12 +65,14 @@ def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     model.train()
     for batch, sample in enumerate(dataloader):
-        print(f"batch: {batch}, X: {sample['image'].dtype}, y: {sample['blurred image'].dtype}")
+        print(
+            f"batch: {batch}, X: {sample['image'].dtype}, y: {sample['blurred image'].dtype}")
         # X, y = X.to(device), y.to(device)
 
         # Compute prediction error
         pred = model(sample['image'])
-        loss = loss_fn(blur_image(pred).flatten(), sample['blurred image'].flatten())
+        loss = loss_fn(blur_image(pred).flatten(),
+                       sample['blurred image'].flatten())
 
         # Backpropagation
         loss.backward()
@@ -90,11 +93,14 @@ def test(dataloader, model, loss_fn):
         for sample in dataloader:
             # X, y = X.to(device), y.to(device)
             pred = model(sample['image'])
-            test_loss += loss_fn(blur_image(pred).flatten(), sample['blurred image'].flatten()).item()
-            correct += (pred.argmax(1) == sample['blurred image']).type(torch.float).sum().item()
+            test_loss += loss_fn(blur_image(pred).flatten(),
+                                 sample['blurred image'].flatten()).item()
+            correct += (pred.argmax(1) ==
+                        sample['blurred image']).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    print(
+        f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 
 loss_fn = nn.CrossEntropyLoss()

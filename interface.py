@@ -7,7 +7,8 @@ from torch import Tensor
 
 # Define the data types used in the C struct.
 class PgmImage(Structure):
-    _fields_ = [("width_", c_uint32), ("height_", c_uint32), ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
+    _fields_ = [("width_", c_uint32), ("height_", c_uint32),
+                ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
 
 
 # Load the shared library into c types.
@@ -45,7 +46,8 @@ def get_normalized_images_training_data_from_directory(directory: str, expected_
     images = []
     for filename in os.listdir(directory):
         if filename.endswith(".pgm"):
-            img = ctest.ReadPgm(os.path.join(directory, filename).encode("utf-8"))
+            img = ctest.ReadPgm(os.path.join(
+                directory, filename).encode("utf-8"))
             if img.contents.width_ != expected_size[0] or img.contents.height_ != expected_size[1]:
                 print(
                     f"An image that is not {expected_size[0]}x{expected_size[1]} was found: {filename} is {img.contents.width_}x{img.contents.height_} instead of 512")
