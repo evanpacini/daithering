@@ -28,18 +28,14 @@ for test_sample in test_dataloader:
     break
 
 # Get cpu, gpu or mps device for training.
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
+device = ("cuda" if torch.cuda.is_available() else
+          "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Using {device} device")
 
 
 # Define model
 class NeuralNetwork(nn.Module):
+
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
@@ -75,7 +71,8 @@ def train(dataloader, model, loss_fn, optimizer):
 
         # Compute prediction error
         pred = model(sample["image"])
-        loss = loss_fn(blur_image(pred).flatten(), sample["blurred image"].flatten())
+        loss = loss_fn(
+            blur_image(pred).flatten(), sample["blurred image"].flatten())
 
         # Backpropagation
         loss.backward()
@@ -97,14 +94,10 @@ def test(dataloader, model, loss_fn):
             # X, y = X.to(device), y.to(device)
             pred = model(sample["image"])
             test_loss += loss_fn(
-                blur_image(pred).flatten(), sample["blurred image"].flatten()
-            ).item()
-            correct += (
-                (pred.argmax(1) == sample["blurred image"])
-                .type(torch.float)
-                .sum()
-                .item()
-            )
+                blur_image(pred).flatten(),
+                sample["blurred image"].flatten()).item()
+            correct += ((pred.argmax(1) == sample["blurred image"]).type(
+                torch.float).sum().item())
     test_loss /= num_batches
     correct /= size
     print(

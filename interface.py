@@ -37,8 +37,9 @@ ctest.WritePgm.restype = c_bool
 
 
 def get_normalized_images_training_data_from_directory(
-    directory: str, expected_size: tuple = (512, 512), radius: int = 1
-) -> np.ndarray:
+        directory: str,
+        expected_size: tuple = (512, 512),
+        radius: int = 1) -> np.ndarray:
     """Reads the data of all images in the specified directory.
 
     The data is normalized to values between 0 and 1.
@@ -52,24 +53,24 @@ def get_normalized_images_training_data_from_directory(
     images = []
     for filename in os.listdir(directory):
         if filename.endswith(".pgm"):
-            img = ctest.ReadPgm(os.path.join(directory, filename).encode("utf-8"))
-            if (
-                img.contents.width_ != expected_size[0]
-                or img.contents.height_ != expected_size[1]
-            ):
+            img = ctest.ReadPgm(
+                os.path.join(directory, filename).encode("utf-8"))
+            if (img.contents.width_ != expected_size[0]
+                    or img.contents.height_ != expected_size[1]):
                 print(
                     f"An image that is not {expected_size[0]}x{expected_size[1]} was found: {filename} is {img.contents.width_}x{img.contents.height_} instead of 512"
                 )
                 continue
             normalized_img = ctest.NormalizePgm(img)
             input_data_image = np.ctypeslib.as_array(
-                normalized_img, shape=(expected_size[0] * expected_size[1],)
-            ).astype(np.double)
+                normalized_img, shape=(expected_size[0] *
+                                       expected_size[1], )).astype(np.double)
             target_img = ctest.KasperBlur(img, radius)
             normalized_target_img = ctest.NormalizePgm(target_img)
             target_data_image = np.ctypeslib.as_array(
-                normalized_target_img, shape=(expected_size[0] * expected_size[1],)
-            ).astype(np.double)
+                normalized_target_img,
+                shape=(expected_size[0] * expected_size[1], )).astype(
+                    np.double)
             images.append((input_data_image, target_data_image))
     return np.array(images)
 
@@ -80,10 +81,14 @@ def polorize_output(output: Tensor) -> Tensor:
     :param output: The output of the neural network.
     :return: The polorized output.
     """
-    return tensor(list(map(lambda x: 255 if x > 0.5 else 0, output.detach().numpy())))
+    return tensor(
+        list(map(lambda x: 255 if x > 0.5 else 0,
+                 output.detach().numpy())))
 
 
-def blur_image(image: Tensor, radius: int = 1, shape: tuple = (512, 512)) -> Tensor:
+def blur_image(image: Tensor,
+               radius: int = 1,
+               shape: tuple = (512, 512)) -> Tensor:
     """Blurs the given image with the given radius.
 
     :param image: The image to blur.
@@ -95,12 +100,12 @@ def blur_image(image: Tensor, radius: int = 1, shape: tuple = (512, 512)) -> Ten
         width_=shape[0],
         height_=shape[1],
         max_gray_=255,
-        data_=image.detach().numpy().astype(np.uint8).ctypes.data_as(POINTER(c_uint8)),
+        data_=image.detach().numpy().astype(np.uint8).ctypes.data_as(
+            POINTER(c_uint8)),
     )
     blurred_img = ctest.KasperBlur(img, radius)
     normalized_blurred_img = ctest.NormalizePgm(blurred_img)
     return tensor(
-        np.ctypeslib.as_array(
-            normalized_blurred_img, shape=(shape[0] * shape[1],)
-        ).astype(np.float32)
-    )
+        np.ctypeslib.as_array(normalized_blurred_img,
+                              shape=(shape[0] * shape[1], )).astype(
+                                  np.float32))
