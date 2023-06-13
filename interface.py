@@ -1,8 +1,8 @@
 import os
 from ctypes import *
+
 import numpy as np
-from torch import tensor
-from torch import Tensor
+from torch import Tensor, tensor
 
 
 # Define the data types used in the C struct.
