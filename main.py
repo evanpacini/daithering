@@ -8,7 +8,7 @@ class PgmImage(Structure):
 
 
 # Load the shared library into c types.
-ctest = CDLL("./test.so")
+ctest = CDLL("./libnetpbm.dll", winmode=0)
 
 # Define the return type of the C function.
 ctest.AllocatePgm.argtypes = [c_uint32, c_uint32]
@@ -45,7 +45,7 @@ ctest.WritePgm("test2.pgm".encode("utf-8"), byref(new_image))
 ctest.ReadPgm.argtypes = [c_char_p]
 ctest.ReadPgm.restype = POINTER(PgmImage)
 
-img2 = ctest.ReadPgm("test.pgm".encode("utf-8"))
+img2 = ctest.ReadPgm("input/grayscale.pgm".encode("utf-8"))
 
 print(img2.contents.width_)
 print(img2.contents.height_)
