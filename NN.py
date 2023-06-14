@@ -1,12 +1,12 @@
 """https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html"""
+import matplotlib.pyplot as plt
 import torch
-from torch import nn
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
+
 from ImageDataset import ImageDataset
 from interface import blur_tensor, polarize_output
-import matplotlib.pyplot as plt
 
 SHOULD_TRAIN = True
 LOAD_MODEL = False

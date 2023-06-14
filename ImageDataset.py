@@ -1,12 +1,12 @@
 """https://pytorch.org/tutorials/beginner/data_loading_tutorial.html"""
-import torch
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
-from interface import (
-    get_normalized_images_training_data_from_directory as get_training_data,
-)
+
+from interface import \
+    get_normalized_images_training_data_from_directory as get_training_data
 
 __all__ = ["ImageDataset"]
 
