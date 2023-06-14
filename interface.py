@@ -6,12 +6,14 @@ from torch import tensor
 from torch import Tensor
 from torchvision.transforms import GaussianBlur
 
-__all__ = ['get_normalized_images_training_data_from_directory', 'polarize_output', 'blur_image', 'blur_tensor']
+__all__ = ['get_normalized_images_training_data_from_directory',
+           'polarize_output', 'blur_image', 'blur_tensor']
 
 
 class PgmImage(Structure):
     """The PgmImage struct used by the c library."""
-    _fields_ = [("width_", c_uint32), ("height_", c_uint32), ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
+    _fields_ = [("width_", c_uint32), ("height_", c_uint32),
+                ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
 
 
 # Load the shared library into c types.
@@ -35,7 +37,7 @@ ctest.WritePgm.restype = c_bool
 
 
 def get_normalized_images_training_data_from_directory(directory: str, expected_size: tuple = (512, 512)) -> list[
-    tuple[str, np.ndarray]]:
+        tuple[str, np.ndarray]]:
     """Reads the data of all images in the specified directory.
 
     The data is normalized to values between 0 and 1.
@@ -47,7 +49,8 @@ def get_normalized_images_training_data_from_directory(directory: str, expected_
     images = []
     for filename in os.listdir(directory):
         if filename.endswith(".pgm"):
-            img = ctest.ReadPgm(os.path.join(directory, filename).encode("utf-8"))
+            img = ctest.ReadPgm(os.path.join(
+                directory, filename).encode("utf-8"))
             if img.contents.width_ != expected_size[0] or img.contents.height_ != expected_size[1]:
                 print(
                     f"An image that is not {expected_size[0]}x{expected_size[1]} was found: {filename}"

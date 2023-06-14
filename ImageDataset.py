@@ -34,7 +34,8 @@ class ImageDataset(Dataset):
 
         image = self.training_data[index][1]
         filename = self.training_data[index][0]
-        sample = {'image': np.reshape(image, self.expected_size).astype(np.float32), 'filename': filename}
+        sample = {'image': np.reshape(image, self.expected_size).astype(
+            np.float32), 'filename': filename}
 
         if self.transform:
             sample['image'] = self.transform(sample['image'])[0]
@@ -43,7 +44,8 @@ class ImageDataset(Dataset):
 
 
 if __name__ == '__main__':
-    dataset = ImageDataset('input', expected_size=(512, 512), transform=ToTensor())
+    dataset = ImageDataset('input', expected_size=(
+        512, 512), transform=ToTensor())
     for i, samp in enumerate(dataset):
         print(samp)
         # img = np.reshape(samp['image'], (512, 512))
