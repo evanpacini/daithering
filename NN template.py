@@ -33,18 +33,14 @@ for X, y in test_dataloader:
     break
 
 # Get cpu, gpu or mps device for training.
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
+device = ("cuda" if torch.cuda.is_available() else
+          "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Using {device} device")
 
 
 # Define model
 class NeuralNetwork(nn.Module):
+
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
@@ -53,7 +49,7 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 10)
+            nn.Linear(512, 10),
         )
 
     def forward(self, x):
@@ -99,7 +95,9 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    print(
+        f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n"
+    )
 
 
 loss_fn = nn.CrossEntropyLoss()

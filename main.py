@@ -1,10 +1,16 @@
 from ctypes import *
+
 import numpy as np
 
 
 # Define the data types used in the C struct.
 class PgmImage(Structure):
-    _fields_ = [("width_", c_uint32), ("height_", c_uint32), ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
+    _fields_ = [
+        ("width_", c_uint32),
+        ("height_", c_uint32),
+        ("max_gray_", c_uint16),
+        ("data_", POINTER(c_uint8)),
+    ]
 
 
 # Load the shared library into c types.
@@ -32,7 +38,9 @@ img.contents.data_[4] = 255
 img.contents.data_[5] = 0
 
 # convert to numpy array (1D)
-np_img = np.ctypeslib.as_array(img.contents.data_, shape=(img.contents.width_ * img.contents.height_,))
+np_img = np.ctypeslib.as_array(img.contents.data_,
+                               shape=(img.contents.width_ *
+                                      img.contents.height_, ))
 print(np_img)
 
 ctest.WritePgm("test.pgm".encode("utf-8"), img)
@@ -50,7 +58,10 @@ img2 = ctest.ReadPgm("input/grayscale.pgm".encode("utf-8"))
 print(img2.contents.width_)
 print(img2.contents.height_)
 print(img2.contents.max_gray_)
-print(np.ctypeslib.as_array(img2.contents.data_, shape=(img2.contents.width_ * img2.contents.height_,)))
+print(
+    np.ctypeslib.as_array(img2.contents.data_,
+                          shape=(img2.contents.width_ *
+                                 img2.contents.height_, )))
 
 # create image using numpy array
 

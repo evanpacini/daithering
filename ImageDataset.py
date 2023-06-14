@@ -1,20 +1,27 @@
 """https://pytorch.org/tutorials/beginner/data_loading_tutorial.html"""
-import torch
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
-from interface import get_normalized_images_training_data_from_directory as get_training_data
 
-__all__ = ['ImageDataset']
+from interface import \
+    get_normalized_images_training_data_from_directory as get_training_data
+
+__all__ = ["ImageDataset"]
 
 
 class ImageDataset(Dataset):
     """Image dataset."""
 
-    def __init__(self, directory: str, expected_size: tuple = (512, 512),
-                 radius: int = 1, transform=None):
-        """ The constructor of the ImageDataset class.
+    def __init__(
+            self,
+            directory: str,
+            expected_size: tuple = (512, 512),
+            radius: int = 1,
+            transform=None,
+    ):
+        """The constructor of the ImageDataset class.
 
         :param directory: The directory to read the images from.
         :param expected_size: The expected size of the images.
@@ -34,21 +41,26 @@ class ImageDataset(Dataset):
 
         image = self.training_data[index][1]
         filename = self.training_data[index][0]
-        sample = {'image': np.reshape(image, self.expected_size).astype(np.float32), 'filename': filename}
+        sample = {
+            "image": np.reshape(image, self.expected_size).astype(np.float32),
+            "filename": filename,
+        }
 
         if self.transform:
-            sample['image'] = self.transform(sample['image'])[0]
+            sample["image"] = self.transform(sample["image"])[0]
 
         return sample
 
 
-if __name__ == '__main__':
-    dataset = ImageDataset('input', expected_size=(512, 512), transform=ToTensor())
+if __name__ == "__main__":
+    dataset = ImageDataset("input",
+                           expected_size=(512, 512),
+                           transform=ToTensor())
     for i, samp in enumerate(dataset):
         print(samp)
         # img = np.reshape(samp['image'], (512, 512))
         # blurred_img = np.reshape(samp['blurred image'], (512, 512))
-        plt.imshow(samp['image'], cmap='gray', vmin=0, vmax=1)
+        plt.imshow(samp["image"], cmap="gray", vmin=0, vmax=1)
         plt.show()
-        plt.imshow(samp['blurred image'], cmap='gray', vmin=0, vmax=1)
+        plt.imshow(samp["blurred image"], cmap="gray", vmin=0, vmax=1)
         plt.show()

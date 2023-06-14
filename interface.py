@@ -1,17 +1,29 @@
 """This module provides an interface to the c library of netpbm-c."""
 import os
 from ctypes import *
+
 import numpy as np
-from torch import tensor
 from torch import Tensor
+from torch import tensor
 from torchvision.transforms import GaussianBlur
 
-__all__ = ['get_normalized_images_training_data_from_directory', 'polarize_output', 'blur_image', 'blur_tensor']
+__all__ = [
+    "get_normalized_images_training_data_from_directory",
+    "polarize_output",
+    "blur_image",
+    "blur_tensor",
+]
 
 
 class PgmImage(Structure):
     """The PgmImage struct used by the c library."""
-    _fields_ = [("width_", c_uint32), ("height_", c_uint32), ("max_gray_", c_uint16), ("data_", POINTER(c_uint8))]
+
+    _fields_ = [
+        ("width_", c_uint32),
+        ("height_", c_uint32),
+        ("max_gray_", c_uint16),
+        ("data_", POINTER(c_uint8)),
+    ]
 
 
 # Load the shared library into c types.
@@ -34,8 +46,9 @@ ctest.WritePgm.argtypes = [c_char_p, POINTER(PgmImage)]
 ctest.WritePgm.restype = c_bool
 
 
-def get_normalized_images_training_data_from_directory(directory: str, expected_size: tuple = (512, 512)) -> list[
-    tuple[str, np.ndarray]]:
+def get_normalized_images_training_data_from_directory(
+    directory: str, expected_size: tuple = (512, 512)
+) -> list[tuple[str, np.ndarray]]:
     """Reads the data of all images in the specified directory.
 
     The data is normalized to values between 0 and 1.
@@ -47,15 +60,18 @@ def get_normalized_images_training_data_from_directory(directory: str, expected_
     images = []
     for filename in os.listdir(directory):
         if filename.endswith(".pgm"):
-            img = ctest.ReadPgm(os.path.join(directory, filename).encode("utf-8"))
-            if img.contents.width_ != expected_size[0] or img.contents.height_ != expected_size[1]:
+            img = ctest.ReadPgm(
+                os.path.join(directory, filename).encode("utf-8"))
+            if (img.contents.width_ != expected_size[0]
+                    or img.contents.height_ != expected_size[1]):
                 print(
                     f"An image that is not {expected_size[0]}x{expected_size[1]} was found: {filename}"
                     f" is {img.contents.width_}x{img.contents.height_}")
                 continue
             normalized_img = ctest.NormalizePgm(img)
-            input_data_image = np.ctypeslib.as_array(normalized_img,
-                                                     shape=(expected_size[0] * expected_size[1],)).astype(np.double)
+            input_data_image = np.ctypeslib.as_array(
+                normalized_img, shape=(expected_size[0] *
+                                       expected_size[1], )).astype(np.double)
             images.append((filename, input_data_image))
     return images
 
@@ -69,7 +85,9 @@ def polarize_output(output: Tensor) -> Tensor:
     return tensor((output.detach().numpy() > 0.5).astype(np.float32))
 
 
-def blur_image(image: Tensor, radius: int = 1, shape: tuple = (512, 512)) -> Tensor:
+def blur_image(image: Tensor,
+               radius: int = 1,
+               shape: tuple = (512, 512)) -> Tensor:
     """Blurs the given image with the given radius.
 
     :param image: The image to blur.
@@ -77,15 +95,27 @@ def blur_image(image: Tensor, radius: int = 1, shape: tuple = (512, 512)) -> Ten
     :param shape: The shape of the image.
     :return: The blurred image.
     """
-    img = PgmImage(width_=shape[0], height_=shape[1], max_gray_=255,
-                   data_=image.detach().numpy().astype(np.uint8).ctypes.data_as(POINTER(c_uint8)))
+    img = PgmImage(
+        width_=shape[0],
+        height_=shape[1],
+        max_gray_=255,
+        data_=image.detach().numpy().astype(np.uint8).ctypes.data_as(
+            POINTER(c_uint8)),
+    )
     blurred_img = ctest.KasperBlur(img, radius)
     normalized_blurred_img = ctest.NormalizePgm(blurred_img)
-    return tensor(np.ctypeslib.as_array(normalized_blurred_img, shape=(shape[0] * shape[1],)).astype(np.float32))
+    return tensor(
+        np.ctypeslib.as_array(normalized_blurred_img,
+                              shape=(shape[0] * shape[1], )).astype(
+                                  np.float32))
 
 
-def blur_tensor(output: Tensor, image_shape: tuple[int, int] = (512, 512), kernel_size: float = 5,
-                sigma: tuple[float, float] = (5, 5)) -> Tensor:
+def blur_tensor(
+        output: Tensor,
+        image_shape: tuple[int, int] = (512, 512),
+        kernel_size: float = 5,
+        sigma: tuple[float, float] = (5, 5),
+) -> Tensor:
     """Blurs the given tensor with the given kernel size and sigma.
 
     :param output: The tensor to blur.
@@ -95,7 +125,11 @@ def blur_tensor(output: Tensor, image_shape: tuple[int, int] = (512, 512), kerne
     :return: The blurred tensor.
     """
     try:
-        return GaussianBlur(kernel_size, sigma=sigma)(
-            output.view(output.shape[0], image_shape[0], image_shape[1]))
+        return GaussianBlur(kernel_size,
+                            sigma=sigma)(output.view(output.shape[0],
+                                                     image_shape[0],
+                                                     image_shape[1]))
     except RuntimeError:
-        return GaussianBlur(kernel_size, sigma=sigma)(output.view(1, image_shape[0], image_shape[1]))
+        return GaussianBlur(kernel_size,
+                            sigma=sigma)(output.view(1, image_shape[0],
+                                                     image_shape[1]))
