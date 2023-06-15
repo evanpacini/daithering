@@ -12,6 +12,7 @@ __all__ = [
     "polarize_output",
     "blur_image",
     "blur_tensor",
+    "write_image"
 ]
 
 
@@ -133,3 +134,19 @@ def blur_tensor(
         return GaussianBlur(kernel_size,
                             sigma=sigma)(output.view(1, image_shape[0],
                                                      image_shape[1]))
+
+
+def write_image(image: Tensor, filename: str):
+    """Writes the given image to the given filename.
+
+    :param image: The image to write.
+    :param filename: The filename to write to.
+    """
+    img = PgmImage(
+        width_=image.shape[0],
+        height_=image.shape[1],
+        max_gray_=255,
+        data_=(image.detach().numpy() * 255).astype(np.uint8).ctypes.data_as(
+            POINTER(c_uint8)),
+    )
+    ctest.WritePgm(filename.encode("utf-8"), img)
