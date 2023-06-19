@@ -9,20 +9,21 @@ from torchvision.transforms import ToTensor
 from ImageDataset import ImageDataset
 from interface import blur_tensor
 from interface import polarize_output
+from interface import write_image
 
-SHOULD_TRAIN = True
-LOAD_MODEL = False
-EPOCHS = 100000
-LEARNING_RATE = 5e-3
-BATCH_SIZE = 3
+SHOULD_TRAIN = False
+LOAD_MODEL = True
+EPOCHS = 10000
+LEARNING_RATE = 5e-1
+BATCH_SIZE = 5
 SEED = 0
 BATCH_DISPLAY_INTERVAL = None
 LOSS_FUNCTION = nn.MSELoss()  # nn.CrossEntropyLoss()
 DIR_TRAINING_DATA = "input/train"
-DIR_TEST_DATA = "input/train"
-SAVE_MODEL_NAME = f"model2_e{EPOCHS}_l{LEARNING_RATE}_b{BATCH_SIZE}_s{SEED}_lf{LOSS_FUNCTION._get_name()}.pth"
+DIR_TEST_DATA = "input/test"
+SAVE_MODEL_NAME = f"model_e{EPOCHS}_l{LEARNING_RATE}_b{BATCH_SIZE}_s{SEED}_lf{LOSS_FUNCTION._get_name()}.pth"
 LOAD_MODEL_NAME = SAVE_MODEL_NAME.replace(f"_e{EPOCHS}",
-                                          "_e11526") + ".interrupted"
+                                          "_e2525") + ".interrupted"
 
 
 # Define model
@@ -33,12 +34,11 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
         self.linear_stack = nn.Sequential(
             nn.Linear(512 * 512, 512),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.Hardsigmoid(),
+            nn.LeakyReLU(),
             nn.Linear(512, 512 * 512),
+            nn.Sigmoid(),
         )
 
     def forward(self, x) -> Tensor:
@@ -128,8 +128,8 @@ def show_image_single(filename,
     :param prediction: The prediction of the image.
     :param image_shape: The shape of the image.
     """
-    fig = plt.figure(figsize=(5, 12))
-    fig.add_subplot(3, 1, 1)
+    fig = plt.figure(figsize=(5, 16))
+    fig.add_subplot(4, 1, 1)
     plt.imshow(
         polarize_output(prediction.cpu()).view(image_shape),
         cmap="gray",
@@ -137,14 +137,20 @@ def show_image_single(filename,
         vmin=0,
         vmax=1,
     )
-    plt.title(f"{filename}: prediction")
-    fig.add_subplot(3, 1, 2)
+    plt.title(f"{filename}: prediction polarized")
+    fig.add_subplot(4, 1, 2)
+    plt.imshow(blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
+               cmap="gray",
+               vmin=0,
+               vmax=1)
+    plt.title(f"{filename}: prediction polarized blurred")
+    fig.add_subplot(4, 1, 3)
     plt.imshow(blur_tensor(prediction.cpu()).view(image_shape),
                cmap="gray",
                vmin=0,
                vmax=1)
     plt.title(f"{filename}: prediction blurred")
-    fig.add_subplot(3, 1, 3)
+    fig.add_subplot(4, 1, 4)
     plt.imshow(blur_tensor(original.cpu()).view(image_shape),
                cmap="gray",
                vmin=0,
@@ -152,6 +158,9 @@ def show_image_single(filename,
     plt.title(f"{filename}: original blurred")
     plt.tight_layout(h_pad=1.0)
     plt.show()
+
+    write_image(polarize_output(prediction.cpu()).view(image_shape), f'output/{filename}')
+
 
 
 if __name__ == "__main__":
@@ -212,6 +221,7 @@ if __name__ == "__main__":
             SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", f"_e{epochs_completed}") +
             ".interrupted")
         torch.save(model.state_dict(), interrupted_model_name)
+        test(test_dataloader, model, LOSS_FUNCTION, show_img=True)
         print(f"Saved PyTorch Model State to {interrupted_model_name}")
         exit(0)
 
