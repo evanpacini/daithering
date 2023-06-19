@@ -139,10 +139,12 @@ def show_image_single(filename,
     )
     plt.title(f"{filename}: prediction polarized")
     fig.add_subplot(4, 1, 2)
-    plt.imshow(blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+    plt.imshow(
+        blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
+        cmap="gray",
+        vmin=0,
+        vmax=1,
+    )
     plt.title(f"{filename}: prediction polarized blurred")
     fig.add_subplot(4, 1, 3)
     plt.imshow(blur_tensor(prediction.cpu()).view(image_shape),
@@ -159,8 +161,9 @@ def show_image_single(filename,
     plt.tight_layout(h_pad=1.0)
     plt.show()
 
-    write_image(polarize_output(prediction.cpu()).view(image_shape), f'output/{filename}')
-
+    write_image(
+        polarize_output(prediction.cpu()).view(image_shape),
+        f"output/{filename}")
 
 
 if __name__ == "__main__":

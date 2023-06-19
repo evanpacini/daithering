@@ -12,7 +12,7 @@ __all__ = [
     "polarize_output",
     "blur_image",
     "blur_tensor",
-    "write_image"
+    "write_image",
 ]
 
 
