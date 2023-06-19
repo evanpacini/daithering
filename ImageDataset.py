@@ -5,8 +5,9 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
-from interface import \
-    get_normalized_images_training_data_from_directory as get_training_data
+from interface import (
+    get_normalized_images_training_data_from_directory as get_training_data,
+)
 
 __all__ = ["ImageDataset"]
 
@@ -15,11 +16,11 @@ class ImageDataset(Dataset):
     """Image dataset."""
 
     def __init__(
-            self,
-            directory: str,
-            expected_size: tuple = (512, 512),
-            radius: int = 1,
-            transform=None,
+        self,
+        directory: str,
+        expected_size: tuple = (512, 512),
+        radius: int = 1,
+        transform=None,
     ):
         """The constructor of the ImageDataset class.
 
@@ -53,9 +54,7 @@ class ImageDataset(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = ImageDataset("input",
-                           expected_size=(512, 512),
-                           transform=ToTensor())
+    dataset = ImageDataset("input", expected_size=(512, 512), transform=ToTensor())
     for i, samp in enumerate(dataset):
         print(samp)
         # img = np.reshape(samp['image'], (512, 512))

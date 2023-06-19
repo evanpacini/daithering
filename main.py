@@ -38,9 +38,9 @@ img.contents.data_[4] = 255
 img.contents.data_[5] = 0
 
 # convert to numpy array (1D)
-np_img = np.ctypeslib.as_array(img.contents.data_,
-                               shape=(img.contents.width_ *
-                                      img.contents.height_, ))
+np_img = np.ctypeslib.as_array(
+    img.contents.data_, shape=(img.contents.width_ * img.contents.height_,)
+)
 print(np_img)
 
 ctest.WritePgm("test.pgm".encode("utf-8"), img)
@@ -59,9 +59,10 @@ print(img2.contents.width_)
 print(img2.contents.height_)
 print(img2.contents.max_gray_)
 print(
-    np.ctypeslib.as_array(img2.contents.data_,
-                          shape=(img2.contents.width_ *
-                                 img2.contents.height_, )))
+    np.ctypeslib.as_array(
+        img2.contents.data_, shape=(img2.contents.width_ * img2.contents.height_,)
+    )
+)
 
 # create image using numpy array
 

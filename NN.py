@@ -22,13 +22,11 @@ LOSS_FUNCTION = nn.MSELoss()  # nn.CrossEntropyLoss()
 DIR_TRAINING_DATA = "input/train"
 DIR_TEST_DATA = "input/test"
 SAVE_MODEL_NAME = f"model_e{EPOCHS}_l{LEARNING_RATE}_b{BATCH_SIZE}_s{SEED}_lf{LOSS_FUNCTION._get_name()}.pth"
-LOAD_MODEL_NAME = SAVE_MODEL_NAME.replace(f"_e{EPOCHS}",
-                                          "_e2525") + ".interrupted"
+LOAD_MODEL_NAME = SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", "_e2525") + ".interrupted"
 
 
 # Define model
 class NeuralNetwork(nn.Module):
-
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
@@ -51,8 +49,7 @@ class NeuralNetwork(nn.Module):
         return self.linear_stack(x)
 
 
-def train(dataloader, network_model: NeuralNetwork, loss_fn,
-          network_optimizer):
+def train(dataloader, network_model: NeuralNetwork, loss_fn, network_optimizer):
     """Trains the model on the given dataloader.
 
     :param dataloader: The dataloader to train on.
@@ -80,10 +77,7 @@ def train(dataloader, network_model: NeuralNetwork, loss_fn,
                 print(f"loss: {loss.item():>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test(dataloader,
-         network_model: NeuralNetwork,
-         loss_fn,
-         show_img: bool = False):
+def test(dataloader, network_model: NeuralNetwork, loss_fn, show_img: bool = False):
     """Tests the model on the given dataloader.
 
     :param dataloader: The dataloader to test on.
@@ -100,8 +94,9 @@ def test(dataloader,
             predictions = network_model.forward(inputs)
             if show_img:
                 show_images(sample, predictions)
-            test_loss += loss_fn.forward(blur_tensor(predictions),
-                                         blur_tensor(inputs)).item()
+            test_loss += loss_fn.forward(
+                blur_tensor(predictions), blur_tensor(inputs)
+            ).item()
     test_loss /= num_batches
     print(f"Test Error: Avg loss: {test_loss:>8f} \n")
 
@@ -112,15 +107,15 @@ def show_images(sample, predictions):
     :param sample: The sample to show.
     :param predictions: The predictions to show.
     """
-    for filename, sample, predictions in zip(sample["filename"],
-                                             sample["image"], predictions):
+    for filename, sample, predictions in zip(
+        sample["filename"], sample["image"], predictions
+    ):
         show_image_single(filename, sample, predictions)
 
 
-def show_image_single(filename,
-                      original,
-                      prediction,
-                      image_shape: tuple[int, int] = (512, 512)):
+def show_image_single(
+    filename, original, prediction, image_shape: tuple[int, int] = (512, 512)
+):
     """Shows the image with the given filename, original and prediction.
 
     :param filename: The filename of the image.
@@ -139,28 +134,29 @@ def show_image_single(filename,
     )
     plt.title(f"{filename}: prediction polarized")
     fig.add_subplot(4, 1, 2)
-    plt.imshow(blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+    plt.imshow(
+        blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
+        cmap="gray",
+        vmin=0,
+        vmax=1,
+    )
     plt.title(f"{filename}: prediction polarized blurred")
     fig.add_subplot(4, 1, 3)
-    plt.imshow(blur_tensor(prediction.cpu()).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+    plt.imshow(
+        blur_tensor(prediction.cpu()).view(image_shape), cmap="gray", vmin=0, vmax=1
+    )
     plt.title(f"{filename}: prediction blurred")
     fig.add_subplot(4, 1, 4)
-    plt.imshow(blur_tensor(original.cpu()).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+    plt.imshow(
+        blur_tensor(original.cpu()).view(image_shape), cmap="gray", vmin=0, vmax=1
+    )
     plt.title(f"{filename}: original blurred")
     plt.tight_layout(h_pad=1.0)
     plt.show()
 
-    write_image(polarize_output(prediction.cpu()).view(
-        image_shape), f'output/{filename}')
+    write_image(
+        polarize_output(prediction.cpu()).view(image_shape), f"output/{filename}"
+    )
 
 
 if __name__ == "__main__":
@@ -174,12 +170,8 @@ if __name__ == "__main__":
     test_data = ImageDataset(DIR_TEST_DATA, transform=ToTensor())
 
     # Create data loaders.
-    train_dataloader = DataLoader(training_data,
-                                  batch_size=BATCH_SIZE,
-                                  shuffle=True)
-    test_dataloader = DataLoader(test_data,
-                                 batch_size=BATCH_SIZE,
-                                 shuffle=True)
+    train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_dataloader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True)
 
     for test_sample in test_dataloader:
         print(f"Shape of image [N, C, H, W]: {test_sample['image'].shape}")
@@ -194,8 +186,13 @@ if __name__ == "__main__":
         exit(0)
 
     # Get cpu, gpu or mps device for training.
-    device = ("cuda" if torch.cuda.is_available() else
-              "mps" if torch.backends.mps.is_available() else "cpu")
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
     print(f"Using {device} device")
 
     model = NeuralNetwork().to(device)
@@ -218,8 +215,9 @@ if __name__ == "__main__":
         print("You pressed CTRL + C.")
         print("Program interrupted.")
         interrupted_model_name = (
-            SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", f"_e{epochs_completed}") +
-            ".interrupted")
+            SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", f"_e{epochs_completed}")
+            + ".interrupted"
+        )
         torch.save(model.state_dict(), interrupted_model_name)
         test(test_dataloader, model, LOSS_FUNCTION, show_img=True)
         print(f"Saved PyTorch Model State to {interrupted_model_name}")
