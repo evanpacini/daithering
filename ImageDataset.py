@@ -15,11 +15,11 @@ class ImageDataset(Dataset):
     """Image dataset."""
 
     def __init__(
-        self,
-        directory: str,
-        expected_size: tuple = (512, 512),
-        radius: int = 1,
-        transform=None,
+            self,
+            directory: str,
+            expected_size: tuple = (512, 512),
+            radius: int = 1,
+            transform=None,
     ):
         """The constructor of the ImageDataset class.
 
@@ -53,7 +53,9 @@ class ImageDataset(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = ImageDataset("input", expected_size=(512, 512), transform=ToTensor())
+    dataset = ImageDataset("input",
+                           expected_size=(512, 512),
+                           transform=ToTensor())
     for i, samp in enumerate(dataset):
         print(samp)
         # img = np.reshape(samp['image'], (512, 512))
