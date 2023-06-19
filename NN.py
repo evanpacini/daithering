@@ -11,19 +11,72 @@ from interface import blur_tensor
 from interface import polarize_output
 from interface import write_image
 
-SHOULD_TRAIN = False
-LOAD_MODEL = True
-EPOCHS = 10000
-LEARNING_RATE = 5e-1
-BATCH_SIZE = 5
+
+class CombinedLoss(nn.Module):
+    def __init__(self, *loss_fns):
+        super().__init__()
+        self.loss_fns = loss_fns
+
+    def forward(self, output: Tensor, target: Tensor) -> Tensor:
+        """Forward pass of the model.
+
+        :param output: The output tensor.
+        :param target: The target tensor.
+        :return: The loss tensor.
+        """
+        # for loss_fn in self.loss_fns:
+        #     print(f"{type(loss_fn).__name__}: {loss_fn(output, target)}")
+        return loss_combiner(*[loss_fn(output, target) for loss_fn in self.loss_fns])
+
+
+class PolarizedLoss(nn.Module):
+
+    def __init__(self, alpha: float = 1):
+        super().__init__()
+        self.alpha = alpha
+
+    def forward(self, output: Tensor, _=None) -> Tensor:
+        """Forward pass of the model.
+
+        :param output: The output tensor.
+        :param _: Target tensor not used.
+        :return: The loss tensor.
+        """
+        return torch.mean(self.alpha * (1 - (2 * output - 1) ** 2))
+
+
+def blur(loss_fn: nn.Module):
+    """Blurs the loss function.
+
+    :param loss_fn: The loss function to blur.
+    :return: The blurred loss function.
+    """
+
+    def blurred_loss_fn(output: Tensor, target: Tensor) -> Tensor:
+        """The blurred loss function.
+
+        :param output: The output tensor.
+        :param target: The target tensor.
+        :return: The loss tensor.
+        """
+        return loss_fn(blur_tensor(output), blur_tensor(target))
+
+    return blurred_loss_fn
+
+
+SHOULD_TRAIN = True
+LOAD_MODEL = False
+EPOCHS = 1000
+LEARNING_RATE = 1e-3
+BATCH_SIZE = 1
 SEED = 0
 BATCH_DISPLAY_INTERVAL = None
-LOSS_FUNCTION = nn.MSELoss()  # nn.CrossEntropyLoss()
+LOSS_FUNCTION = CombinedLoss(blur(nn.L1Loss()), PolarizedLoss(0.5))  # nn.MSELoss()  # nn.CrossEntropyLoss()
 DIR_TRAINING_DATA = "input/train"
 DIR_TEST_DATA = "input/test"
 SAVE_MODEL_NAME = f"model_e{EPOCHS}_l{LEARNING_RATE}_b{BATCH_SIZE}_s{SEED}_lf{LOSS_FUNCTION._get_name()}.pth"
 LOAD_MODEL_NAME = SAVE_MODEL_NAME.replace(f"_e{EPOCHS}",
-                                          "_e2525") + ".interrupted"
+                                          "_e5000")  # + ".interrupted"
 
 
 # Define model
@@ -33,12 +86,8 @@ class NeuralNetwork(nn.Module):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear_stack = nn.Sequential(
-            nn.Linear(512 * 512, 512),
-            nn.LeakyReLU(),
-            nn.Linear(512, 512),
-            nn.LeakyReLU(),
-            nn.Linear(512, 512 * 512),
-            nn.Sigmoid(),
+            nn.Conv2d(1, 1, kernel_size=3, padding=1),
+            nn.Sigmoid()
         )
 
     def forward(self, x) -> Tensor:
@@ -47,11 +96,22 @@ class NeuralNetwork(nn.Module):
         :param x: The input tensor.
         :return: The output tensor.
         """
-        x = self.flatten(x)
-        return self.linear_stack(x)
+        # x = self.flatten(x)
+        x = self.linear_stack(x)
+
+        return x
 
 
-def train(dataloader, network_model: NeuralNetwork, loss_fn,
+def loss_combiner(*losses: Tensor) -> Tensor:
+    """Combines losses.
+
+    :param losses: The losses to combine.
+    :return: The combined loss.
+    """
+    return sum(losses) / len(losses)
+
+
+def train(dataloader, network_model: NeuralNetwork, loss_fn: nn.Module,
           network_optimizer):
     """Trains the model on the given dataloader.
 
@@ -67,10 +127,12 @@ def train(dataloader, network_model: NeuralNetwork, loss_fn,
 
         # Compute prediction error
         predictions = network_model(inputs)
-        loss = loss_fn.forward(blur_tensor(predictions), blur_tensor(inputs))
+        loss = loss_fn.forward(predictions, inputs)
 
         # Backpropagation
         loss.backward()
+        # for param in network_model.parameters():
+        #     print(param.grad)
         network_optimizer.step()
         network_optimizer.zero_grad()
 
@@ -100,8 +162,8 @@ def test(dataloader,
             predictions = network_model.forward(inputs)
             if show_img:
                 show_images(sample, predictions)
-            test_loss += loss_fn.forward(blur_tensor(predictions),
-                                         blur_tensor(inputs)).item()
+            test_loss = loss_fn.forward(predictions, inputs).item()
+
     test_loss /= num_batches
     print(f"Test Error: Avg loss: {test_loss:>8f} \n")
 
@@ -120,7 +182,7 @@ def show_images(sample, predictions):
 def show_image_single(filename,
                       original,
                       prediction,
-                      image_shape: tuple[int, int] = (512, 512)):
+                      image_shape: tuple[int, int] = (28, 28)):
     """Shows the image with the given filename, original and prediction.
 
     :param filename: The filename of the image.
@@ -128,39 +190,39 @@ def show_image_single(filename,
     :param prediction: The prediction of the image.
     :param image_shape: The shape of the image.
     """
-    fig = plt.figure(figsize=(5, 16))
-    fig.add_subplot(4, 1, 1)
+    fig = plt.figure(figsize=(16, 16))
+    fig.add_subplot(2, 2, 1)
     plt.imshow(
-        polarize_output(prediction.cpu()).view(image_shape),
+        prediction.cpu().view(image_shape),
         cmap="gray",
-        interpolation="nearest",
         vmin=0,
-        vmax=1,
-    )
-    plt.title(f"{filename}: prediction polarized")
-    fig.add_subplot(4, 1, 2)
-    plt.imshow(blur_tensor(polarize_output(prediction.cpu())).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
-    plt.title(f"{filename}: prediction polarized blurred")
-    fig.add_subplot(4, 1, 3)
-    plt.imshow(blur_tensor(prediction.cpu()).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+        vmax=1)
+    plt.title(f"{filename}: prediction")
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(
+        blur_tensor(prediction.cpu()).view(image_shape),
+        cmap="gray",
+        vmin=0,
+        vmax=1)
     plt.title(f"{filename}: prediction blurred")
-    fig.add_subplot(4, 1, 4)
-    plt.imshow(blur_tensor(original.cpu()).view(image_shape),
-               cmap="gray",
-               vmin=0,
-               vmax=1)
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(
+        original.cpu().view(image_shape),
+        cmap="gray",
+        vmin=0,
+        vmax=1)
+    plt.title(f"{filename}: original")
+    fig.add_subplot(2, 2, 4)
+    plt.imshow(
+        blur_tensor(original.cpu()).view(image_shape),
+        cmap="gray",
+        vmin=0,
+        vmax=1)
     plt.title(f"{filename}: original blurred")
     plt.tight_layout(h_pad=1.0)
     plt.show()
 
-    write_image(polarize_output(prediction.cpu()).view(image_shape), f'output/{filename}')
-
+    write_image(prediction.cpu().view(image_shape), f'output/{filename}')
 
 
 if __name__ == "__main__":
@@ -218,8 +280,8 @@ if __name__ == "__main__":
         print("You pressed CTRL + C.")
         print("Program interrupted.")
         interrupted_model_name = (
-            SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", f"_e{epochs_completed}") +
-            ".interrupted")
+                SAVE_MODEL_NAME.replace(f"_e{EPOCHS}", f"_e{epochs_completed}") +
+                ".interrupted")
         torch.save(model.state_dict(), interrupted_model_name)
         test(test_dataloader, model, LOSS_FUNCTION, show_img=True)
         print(f"Saved PyTorch Model State to {interrupted_model_name}")

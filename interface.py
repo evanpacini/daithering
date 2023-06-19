@@ -48,7 +48,7 @@ ctest.WritePgm.restype = c_bool
 
 
 def get_normalized_images_training_data_from_directory(
-    directory: str, expected_size: tuple = (512, 512)
+    directory: str, expected_size: tuple = (28, 28)
 ) -> list[tuple[str, np.ndarray]]:
     """Reads the data of all images in the specified directory.
 
@@ -88,7 +88,7 @@ def polarize_output(output: Tensor) -> Tensor:
 
 def blur_image(image: Tensor,
                radius: int = 1,
-               shape: tuple = (512, 512)) -> Tensor:
+               shape: tuple = (28, 28)) -> Tensor:
     """Blurs the given image with the given radius.
 
     :param image: The image to blur.
@@ -113,8 +113,8 @@ def blur_image(image: Tensor,
 
 def blur_tensor(
         output: Tensor,
-        image_shape: tuple[int, int] = (512, 512),
-        kernel_size: float = 5,
+        image_shape: tuple[int, int] = (28, 28),
+        kernel_size: float = 3,
         sigma: tuple[float, float] = (5, 5),
 ) -> Tensor:
     """Blurs the given tensor with the given kernel size and sigma.

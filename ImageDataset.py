@@ -17,7 +17,7 @@ class ImageDataset(Dataset):
     def __init__(
             self,
             directory: str,
-            expected_size: tuple = (512, 512),
+            expected_size: tuple = (28, 28),
             radius: int = 1,
             transform=None,
     ):
@@ -54,12 +54,12 @@ class ImageDataset(Dataset):
 
 if __name__ == "__main__":
     dataset = ImageDataset("input",
-                           expected_size=(512, 512),
+                           expected_size=(28, 28),
                            transform=ToTensor())
     for i, samp in enumerate(dataset):
         print(samp)
-        # img = np.reshape(samp['image'], (512, 512))
-        # blurred_img = np.reshape(samp['blurred image'], (512, 512))
+        # img = np.reshape(samp['image'], (28, 28))
+        # blurred_img = np.reshape(samp['blurred image'], (28, 28))
         plt.imshow(samp["image"], cmap="gray", vmin=0, vmax=1)
         plt.show()
         plt.imshow(samp["blurred image"], cmap="gray", vmin=0, vmax=1)
