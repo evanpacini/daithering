@@ -159,8 +159,8 @@ def show_image_single(filename,
     plt.tight_layout(h_pad=1.0)
     plt.show()
 
-    write_image(polarize_output(prediction.cpu()).view(image_shape), f'output/{filename}')
-
+    write_image(polarize_output(prediction.cpu()).view(
+        image_shape), f'output/{filename}')
 
 
 if __name__ == "__main__":
